@@ -464,4 +464,5 @@ conclusion_html = f"""
 st.markdown(conclusion_html, unsafe_allow_html=True)
 
 # --- PIED DE PAGE ---
+
 st.markdown(f"<div style='text-align:center; color:#999; margin-top:20px; margin-bottom: 40px; font-size:0.8rem;'>Agence PATRIM Toulouse - Simulation Confidentielle</div>", unsafe_allow_html=True)
