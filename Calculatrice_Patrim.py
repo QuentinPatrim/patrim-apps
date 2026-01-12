@@ -96,6 +96,7 @@ else:
 st.markdown("<h2 style='text-align: center; margin-bottom: 30px;'>Simulateur de Financement</h2>", unsafe_allow_html=True)
 
 # --- SÉLECTEUR DE MODE ---
+# Attention : Les espaces dans les noms sont importants pour le "if" plus bas
 mode_calcul = st.radio("", [" Calculer une Mensualité", " Ma Capacité d'emprunt"], horizontal=True, label_visibility="collapsed")
 
 # --- INPUTS ---
@@ -104,15 +105,20 @@ st.markdown("### 1. Paramètres du Projet")
 if mode_calcul == " Calculer une Mensualité":
     c1, c2 = st.columns(2)
     with c1:
-        # Renommé pour plus de clarté
-        montant_projet_input = st.number_input("Montant du Projet (€)", value=250000, step=1000, format="%d", help="Prix du bien + Frais de notaire")
+        montant_projet_input = st.number_input("Montant à financer (€)", value=250000, step=1000, format="%d", help="Montant du bien + frais")
         duree_annees = st.slider("Durée (années)", 7, 30, 20, 1)
     with c2:
-        # AJOUT APPORT VARIABLE
+        # AJOUT : Apport variable ici aussi
         apport = st.number_input("Votre Apport (€)", value=30000, step=1000, format="%d")
+        
+        # CALCUL : On déduit l'apport du montant projet pour savoir combien on emprunte
         montant_emprunte_final = montant_projet_input - apport
+        
+        # Initialisation des variables non utilisées dans ce mode pour éviter le BUG
         revenus_totaux = 0
-        taux_endettement_choisi = 0 # Non utilisé dans ce mode
+        taux_endettement_choisi = 0
+        mensualite_cible_capacite = 0 # <--- C'est cette ligne qui corrige le bug NameError !
+        
 else:
     st.caption("Ajustez vos revenus et votre taux d'endettement souhaité")
     c_rev1, c_rev2 = st.columns(2)
@@ -121,18 +127,17 @@ else:
     with c_rev2:
         revenu_2 = st.number_input("Revenus nets mensuels (Conjoint)", value=0, step=100, format="%d")
     
-    # AJOUT APPORT ET TAUX ENDETTEMENT
+    # AJOUT APPORT ET TAUX ENDETTEMENT VARIABLE
     c_fin1, c_fin2 = st.columns(2)
     with c_fin1:
         apport = st.number_input("Votre Apport (€)", value=30000, step=1000, format="%d")
     with c_fin2:
-        # AJOUT CURSEUR TAUX ENDETTEMENT
         taux_endettement_choisi = st.slider("Taux d'endettement max (%)", 30, 40, 35, 1, help="Généralement 35% assurance comprise")
 
     duree_annees = st.slider("Durée souhaitée (années)", 7, 30, 20, 1)
     
     revenus_totaux = revenu_1 + revenu_2
-    # Calcul dynamique selon le curseur
+    # Calcul dynamique avec le nouveau curseur
     mensualite_cible_capacite = revenus_totaux * (taux_endettement_choisi / 100)
 
 st.markdown("### 2. Conditions du Marché")
@@ -147,7 +152,7 @@ tm = taux_nominal / 100 / 12
 t_ass_mensuel = taux_assurance / 100 / 12
 nb_mois = duree_annees * 12
 
-if mode_calcul == "🎯 Calculer une Mensualité":
+if mode_calcul == " Calculer une Mensualité":
     if montant_emprunte_final > 0:
         mensualite_hors_ass = montant_emprunte_final * (tm * (1 + tm)**nb_mois) / ((1 + tm)**nb_mois - 1)
         mensualite_ass = montant_emprunte_final * t_ass_mensuel
@@ -175,81 +180,4 @@ if mode_calcul == " Calculer une Mensualité":
     st.markdown(f"""
     <div class="main-result-card">
         <div class="result-label-big">Votre Mensualité Estimée (Assurance incluse)</div>
-        <div class="result-val-big">{fmt(mensualite_cc_finale)} € <span style="font-size:1.5rem;">/ mois</span></div>
-        <div class="result-sub-val">
-            Pour un emprunt de {fmt(montant_emprunte_final)} € (Apport déduit)
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    phrase_synthese = f"💡 **Synthèse du coût :** Pour un projet de **{fmt(montant_projet_input)} €** avec **{fmt(apport)} €** d'apport, vous empruntez **{fmt(montant_emprunte_final)} €**. Le coût total du crédit est estimé à **{fmt(cout_total_credit)} €**."
-
-else:
-    # MODE 2 : ON AFFICHE LA CAPACITÉ D'EMPRUNT EN GROS
-    st.markdown(f"""
-    <div class="main-result-card">
-        <div class="result-label-big">Montant Maximum Empruntable</div>
-        <div class="result-val-big">{fmt(montant_emprunte_final)} €</div>
-        <div class="result-sub-val">
-            Mensualité max : {fmt(mensualite_cc_finale)} €/mois ({taux_endettement_choisi}% endettement)
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    budget_total = montant_emprunte_final + apport
-    phrase_synthese = f"💡 **Enveloppe Globale :** En ajoutant votre apport de **{fmt(apport)} €** à ce crédit, votre budget d'achat total (FAI) s'élève à environ **{fmt(budget_total)} €**."
-
-# Encart central de synthèse
-st.info(phrase_synthese)
-
-# --- FORMULAIRE DE CONTACT ---
-st.write("")
-st.write("")
-st.markdown("###  Concrétisez votre projet avec PATRIM")
-
-with st.container(border=True):
-    st.markdown("#### Demander une étude personnalisée")
-    st.markdown("Sélectionnez le type de projet pour pré-qualifier votre demande :")
-    
-    col_check1, col_check2, col_check3 = st.columns(3)
-    with col_check1: type_rp = st.checkbox("Résidence Principale")
-    with col_check2: type_inv = st.checkbox("Investissement Locatif")
-    with col_check3: type_rs = st.checkbox("Résidence Secondaire")
-    
-    # Génération du mail
-    sujet_mail = f"Demande étude financement - Projet ~{fmt(montant_emprunte_final)}€"
-    intro_mail = ""
-    
-    if mode_calcul == " Ma Capacité d'emprunt":
-        intro_mail = f"Capacité calculée sur revenus de {fmt(revenus_totaux)} €/mois avec {taux_endettement_choisi}% d'endettement.\n"
-    else:
-        intro_mail = f"Calcul de mensualité pour un projet global de {fmt(montant_projet_input)} €.\n"
-
-    corps_mail = f"""Bonjour Quentin,
-    
-Je souhaite affiner la simulation effectuée sur votre site :
-
---- SYNTHÈSE ---
-{intro_mail}
-- Montant financé (Crédit) : {fmt(montant_emprunte_final)} €
-- Apport personnel : {fmt(apport)} €
-- Durée : {duree_annees} ans
-- Mensualité ciblée (AI) : {fmt(mensualite_cc_finale)} €/mois
-
---- PROJET ---
-Type : {'[X] RP ' if type_rp else ''}{'[X] Locatif ' if type_inv else ''}{'[X] Secondaire ' if type_rs else ''}
-
-Merci de me recontacter pour une étude approfondie.
-
-Cordialement,"""
-    
-    mailto_link = f"mailto:quentin.delsol@patrim.fr?subject={urllib.parse.quote(sujet_mail)}&body={urllib.parse.quote(corps_mail)}"
-    
-    st.markdown(f"""
-        <a href="{mailto_link}" class="contact-btn">
-            📩 Envoyer ma simulation à Quentin Delsol
-        </a>
-        <p style="text-align:center; margin-top:15px; color:#888 !important; font-size:0.8rem;">
-            En cliquant, votre application de messagerie s'ouvrira automatiquement.
-        </p>
-    """, unsafe_allow_html=True)
+        <div class="result-val-big">{fmt(mensualite_cc_finale)} € <span style="font-
