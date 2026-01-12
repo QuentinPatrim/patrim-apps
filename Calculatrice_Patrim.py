@@ -96,12 +96,12 @@ else:
 st.markdown("<h2 style='text-align: center; margin-bottom: 30px;'>Simulateur de Financement</h2>", unsafe_allow_html=True)
 
 # --- SÉLECTEUR DE MODE ---
-mode_calcul = st.radio("", ["🎯 Calculer une Mensualité", "💰 Ma Capacité d'emprunt"], horizontal=True, label_visibility="collapsed")
+mode_calcul = st.radio("", [" Calculer une Mensualité", " Ma Capacité d'emprunt"], horizontal=True, label_visibility="collapsed")
 
 # --- INPUTS ---
 st.markdown("### 1. Paramètres du Projet")
 
-if mode_calcul == "🎯 Calculer une Mensualité":
+if mode_calcul == " Calculer une Mensualité":
     c1, c2 = st.columns(2)
     with c1:
         # Renommé pour plus de clarté
@@ -170,7 +170,7 @@ cout_total_credit = (mensualite_cc_finale * nb_mois) - montant_emprunte_final
 st.write("")
 st.write("")
 
-if mode_calcul == "🎯 Calculer une Mensualité":
+if mode_calcul == " Calculer une Mensualité":
     # MODE 1 : ON AFFICHE LA MENSUALITÉ EN GROS
     st.markdown(f"""
     <div class="main-result-card">
@@ -205,7 +205,7 @@ st.info(phrase_synthese)
 # --- FORMULAIRE DE CONTACT ---
 st.write("")
 st.write("")
-st.markdown("### 🚀 Concrétisez votre projet avec PATRIM")
+st.markdown("###  Concrétisez votre projet avec PATRIM")
 
 with st.container(border=True):
     st.markdown("#### Demander une étude personnalisée")
@@ -220,7 +220,7 @@ with st.container(border=True):
     sujet_mail = f"Demande étude financement - Projet ~{fmt(montant_emprunte_final)}€"
     intro_mail = ""
     
-    if mode_calcul == "💰 Ma Capacité d'emprunt":
+    if mode_calcul == " Ma Capacité d'emprunt":
         intro_mail = f"Capacité calculée sur revenus de {fmt(revenus_totaux)} €/mois avec {taux_endettement_choisi}% d'endettement.\n"
     else:
         intro_mail = f"Calcul de mensualité pour un projet global de {fmt(montant_projet_input)} €.\n"
